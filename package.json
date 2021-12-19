@@ -51,7 +51,7 @@
   },
   "dependencies": {
     "@embassy/framework": "^0.1.1",
-    "@embassy/interface": "^0.2.2",
+    "@embassy/interface": "^0.2.6",
     "@winry/fc2": "^2.5.4",
     "adv-err": "^0.4.0",
     "body": "^5.1.0",

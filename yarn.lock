@@ -304,10 +304,10 @@
   dependencies:
     tslib "^2.3.1"
 
-"@embassy/interface@^0.2.2":
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/@embassy/interface/-/interface-0.2.2.tgz#97f2262ff2663549ac58adbe33c37ca7e84adc19"
-  integrity sha512-kUjtJWLjeN1UO3o4ljYfNuyCQuo4Ivo0lMbcGJ3KN20qE/QYh5+HeV0WAvUZI509n8R0caTwpOjGGuk4vGeX4A==
+"@embassy/interface@^0.2.6":
+  version "0.2.6"
+  resolved "https://registry.yarnpkg.com/@embassy/interface/-/interface-0.2.6.tgz#aaf952bc0bd60e525e18f5467bcc5e744ac6c828"
+  integrity sha512-8xsnIP7tPgkvppHMCFwFTBt/OUkJotc+DpdXFEXLLSXlA7jIOW3YkM1+P7fchi5NBKUBnD+C+yEY95daA8lxzw==
   dependencies:
     tslib "^2.3.1"
 

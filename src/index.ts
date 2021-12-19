@@ -1,3 +1,4 @@
+export * from './client';
 export * from './context';
 export * from './connector';
 export * from './logger';
