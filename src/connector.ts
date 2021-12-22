@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { initContext, mergeContext } from '@embassy/framework';
 import { IConnector, IContext, IHttpRequest, IHttpResponse, ReturnedError, TDefaultResult } from '@embassy/interface';
-import { catchError } from 'adv-err';
+import { BaseError, catchError, TCatchErrorConfig } from 'adv-err';
 import { FC } from '@winry/fc2';
 import { AliContext } from './context';
 import { AliLogger } from './logger';
@@ -10,7 +10,30 @@ import { AliHttpResponse } from '.';
 
 type TCombineArr<TArr1 extends any[], TArr2 extends any[]> = [...arr1: TArr1, ...arr2: TArr2];
 
+
+export const parseErrorLog = (err: any) => {
+  if (typeof err === 'string') {
+    return err
+  }
+  if (err instanceof BaseError) {
+    return err.toJSON({withStack: true, withData: true})
+  }
+  if (err instanceof Error) {
+    err = { errType: err.name, errMsg: err.message, stack: err.stack }
+  }
+  return JSON.stringify(err)
+}
+
+export type TBaseHandlerConfig = {
+  catchOptions?: TCatchErrorConfig
+}
+
 export class AliConnector implements IConnector<FC.TEventHandler, FC.THttpHandler> {
+  debug = false
+  constructor({ debug }: { debug?: boolean } = {}) {
+    this.debug = debug ?? this.debug
+  }
+
   makeAsyncHandler =
     <TArgs extends any[] = any[], TResult = any>(inner: (...args: TArgs) => Promise<TResult>) =>
     async (...args: TCombineArr<TArgs, [FC.TCallback]>) => {
@@ -30,8 +53,11 @@ export class AliConnector implements IConnector<FC.TEventHandler, FC.THttpHandle
       }
     };
 
-  makeBufferHandler = <TResult = TDefaultResult>(inner: (event: Buffer, context: IContext) => Promise<TResult>) =>
-    this.makeAsyncHandler(async function (buffer, ctx) {
+  makeBufferHandler = <TResult = TDefaultResult>(
+    inner: (event: Buffer, context: IContext) => Promise<TResult>,
+    { catchOptions = {} }: TBaseHandlerConfig = {},
+  ) =>
+    this.makeAsyncHandler(async (buffer, ctx) => {
       const logger = new AliLogger(ctx.logger);
       const context = new AliContext(ctx);
       await initContext({ context, logger });
@@ -39,7 +65,11 @@ export class AliConnector implements IConnector<FC.TEventHandler, FC.THttpHandle
         async () => {
           return await inner(buffer, context);
         },
-        { logFailure: (e) => ctx.logger.error(e), throwServerError: true },
+        { 
+          logUncaught: (e) => ctx.logger.error(parseErrorLog(e)), 
+          throwServerError: this.debug,
+          ...catchOptions
+        },
       );
       if (result && result.errCode > 0) {
         throw new ReturnedError(result);
@@ -47,21 +77,25 @@ export class AliConnector implements IConnector<FC.TEventHandler, FC.THttpHandle
       return result;
     }) as FC.TEventHandler;
 
-  makeStringHandler = <TResult = any>(inner: (event: string, context: IContext) => Promise<TResult>) =>
-    this.makeBufferHandler(async function (buffer, ctx) {
+  makeStringHandler = <TResult = any>(
+    inner: (event: string, context: IContext) => Promise<TResult>,
+    options: TBaseHandlerConfig = {},
+  ) =>
+    this.makeBufferHandler(async (buffer, ctx) => {
       const event = buffer.toString();
       await mergeContext({ event });
       return await inner(event, ctx);
-    }) as FC.TEventHandler;
+    }, options) as FC.TEventHandler;
 
   makeJsonHandler = <TEvent extends object = object, TResult = any>(
     inner: (event: TEvent, context: IContext) => Promise<TResult>,
+    options: TBaseHandlerConfig = {},
   ) =>
-    this.makeStringHandler(async function (str, ctx) {
+    this.makeStringHandler(async (str, ctx) => {
       const event = JSON.parse(str) as any;
       await mergeContext({ event });
       return await inner(event, ctx);
-    }) as FC.TEventHandler;
+    }, options) as FC.TEventHandler;
 
   makeHttpHandler = <TResult = void>(
     inner: (request: IHttpRequest, response: IHttpResponse, context: IContext) => Promise<TResult>,
