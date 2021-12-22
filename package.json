@@ -1,6 +1,6 @@
 {
   "name": "@embassy/aliyun",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Aliyun support for the serverless-embassy",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

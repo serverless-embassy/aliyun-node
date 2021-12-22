@@ -10,28 +10,27 @@ import { AliHttpResponse } from '.';
 
 type TCombineArr<TArr1 extends any[], TArr2 extends any[]> = [...arr1: TArr1, ...arr2: TArr2];
 
-
 export const parseErrorLog = (err: any) => {
   if (typeof err === 'string') {
-    return err
+    return err;
   }
   if (err instanceof BaseError) {
-    return err.toJSON({withStack: true, withData: true})
+    return err.toJSON({ withStack: true, withData: true });
   }
   if (err instanceof Error) {
-    err = { errType: err.name, errMsg: err.message, stack: err.stack }
+    err = { errType: err.name, errMsg: err.message, stack: err.stack };
   }
-  return JSON.stringify(err)
-}
+  return JSON.stringify(err);
+};
 
 export type TBaseHandlerConfig = {
-  catchOptions?: TCatchErrorConfig
-}
+  catchOptions?: TCatchErrorConfig;
+};
 
 export class AliConnector implements IConnector<FC.TEventHandler, FC.THttpHandler> {
-  debug = false
+  debug = false;
   constructor({ debug }: { debug?: boolean } = {}) {
-    this.debug = debug ?? this.debug
+    this.debug = debug ?? this.debug;
   }
 
   makeAsyncHandler =
@@ -65,10 +64,10 @@ export class AliConnector implements IConnector<FC.TEventHandler, FC.THttpHandle
         async () => {
           return await inner(buffer, context);
         },
-        { 
-          logUncaught: (e) => ctx.logger.error(parseErrorLog(e)), 
+        {
+          logUncaught: (e) => ctx.logger.error(parseErrorLog(e)),
           throwServerError: this.debug,
-          ...catchOptions
+          ...catchOptions,
         },
       );
       if (result && result.errCode > 0) {
